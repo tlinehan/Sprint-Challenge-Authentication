@@ -3,6 +3,7 @@ const db = require('../database/dbConfig');
 const { authenticate,
   generateToken
 } = require('./middlewares');
+const bcrypt = require('bcryptjs');
 
 module.exports = server => {
   server.post('/api/register', register);
@@ -13,11 +14,14 @@ module.exports = server => {
 
 function register(req, res) {
   // implement user registration
-  const newUser = req.body;
+  const {username, password} = req.body;
+  const newUser = {username, password};
+  const hash = bcrypt.hashSync(newUser.password, 14);
+  newUser.password = hash;
   db('users')
     .insert(newUser)
     .then(newId => {
-      const token = generateToken(newId);
+      const token = generateToken(newId[0]);
       res.status(201).send(token);
     })
     .catch(err => res.send(err));
@@ -25,6 +29,19 @@ function register(req, res) {
 
 function login(req, res) {
   // implement user login
+  const loginDetails = req.body;
+  db('users')  
+    .where({username: loginDetails.username})
+    .first()
+    .then(function(user) {
+      if (user && bcrypt.compareSync(loginDetails.password, user.password)) {
+        const userId = user.id;
+        const token = generateToken(userId);
+        res.status(200).send(token);
+      } else {
+      return res.status(401).json({error: 'Incorrect credentials'});
+      }
+    }).catch( err => { res.status(500).json(err) } );
 }
 
 function getJokes(req, res) {
