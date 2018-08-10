@@ -15,7 +15,12 @@ module.exports = server => {
 function register(req, res) {
   // implement user registration
   const {username, password} = req.body;
-  const newUser = {username, password};
+  let newUser;
+  if (!username || !password) {
+    return res.status(400).json({error: 'Data Shape Requirements Not Met'}).end();
+  } else if (username && password) {
+    newUser = {username, password};
+  }
   const hash = bcrypt.hashSync(newUser.password, 14);
   newUser.password = hash;
   db('users')
@@ -27,9 +32,15 @@ function register(req, res) {
     .catch(err => res.send(err));
 }
 
-function login(req, res) {
+function login(req, res, next) {
   // implement user login
-  const loginDetails = req.body;
+  const {username, password} = req.body;
+  let loginDetails;
+  if (!username || !password) {
+    return res.status(400).json({error: 'Data Shape Requirements Not Met'}).end();
+  } else if (username && password) {
+    loginDetails = {username, password};
+  }
   db('users')  
     .where({username: loginDetails.username})
     .first()
@@ -41,7 +52,7 @@ function login(req, res) {
       } else {
       return res.status(401).json({error: 'Incorrect credentials'});
       }
-    }).catch( err => { res.status(500).json(err) } );
+    }).catch( error => res.status(500).send(error) );
 }
 
 function getJokes(req, res) {
