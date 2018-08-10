@@ -28,8 +28,7 @@ function register(req, res) {
     .then(newId => {
       const token = generateToken(newId[0]);
       res.status(201).send(token);
-    })
-    .catch(err => res.send(err));
+    }).catch( error => res.status(500).send(error) );
 }
 
 function login(req, res, next) {
