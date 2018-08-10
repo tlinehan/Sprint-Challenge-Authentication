@@ -5,6 +5,7 @@ const jwtKey = require('../_secrets/keys').jwtKey;
 // quickly see what this file exports
 module.exports = {
   authenticate,
+  generateToken
 };
 
 // implementation details
@@ -24,4 +25,11 @@ function authenticate(req, res, next) {
       error: 'No token provided, must be set on the Authorization Header',
     });
   }
+}
+
+//GENERATE TOKEN
+function generateToken (userId) {
+  const payload = {id: userId};
+  const options = {expiresIn: '1000000y', jwtid: 'Lambda'};
+  return jwt.sign(payload, jwtKey, options);
 }
